@@ -252,7 +252,7 @@ class WiktionaryParser(object):
             json_obj_list.append(data_obj.to_json())
         return json_obj_list
 
-    def fetch(self, word, language=None, old_id=None,offline=True):
+    def fetch(self, word, language=None, old_id=None,offline=False):
         language = self.language if not language else language
         if offline:
            import wiktionaryimporter as sqlite
@@ -267,5 +267,5 @@ class WiktionaryParser(object):
 if __name__ == '__main__':
 	import sys
 	word=sys.argv[1] if len(sys.argv)>1 else "example"
-	answer=WiktionaryParser().fetch(word)
+	answer=WiktionaryParser().fetch(word,offline=True)
 	print(answer)
