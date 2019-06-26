@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import re, requests
 from utils import WordData, Definition, RelatedWord
 from bs4 import BeautifulSoup
@@ -251,10 +252,20 @@ class WiktionaryParser(object):
             json_obj_list.append(data_obj.to_json())
         return json_obj_list
 
-    def fetch(self, word, language=None, old_id=None):
+    def fetch(self, word, language=None, old_id=None,offline=True):
         language = self.language if not language else language
-        response = self.session.get(self.url.format(word), params={'oldid': old_id})
-        self.soup = BeautifulSoup(response.text.replace('>\n<', '><'), 'html.parser')
+        if offline:
+           import wiktionaryimporter as sqlite
+           response = sqlite.query(word)
+        else:
+           response = self.session.get(self.url.format(word), params={'oldid': old_id}).text
+        self.soup = BeautifulSoup(response.replace('>\n<', '><'), 'html.parser')
         self.current_word = word
         self.clean_html()
         return self.get_word_data(language.lower())
+        
+if __name__ == '__main__':
+	import sys
+	word=sys.argv[1] if len(sys.argv)>1 else "example"
+	answer=WiktionaryParser().fetch(word)
+	print(answer)
