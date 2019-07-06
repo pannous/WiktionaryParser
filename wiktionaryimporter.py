@@ -6,10 +6,9 @@ import sqlite3
 from os.path import exists, isfile
 import os
 dir = os.path.dirname(os.path.abspath(__file__))
-dir = '~/Documents/bin/'
-dir = os.getenv("HOME")  #+'/bin/'
+dir = os.getenv("HOME")+'/Documents/bin/'
 url = 'https://dumps.wikimedia.org/enwiktionary/latest/enwiktionary-latest-pages-articles.xml.bz2'
-
+print(dir)
 conn = sqlite3.connect(dir + '/wiktionary.sqlite')
 c = conn.cursor()
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #ln /me/dev/python/extensions.py
-from extensions import *
+#from extensions import *
 import re
 #from wiktionary.wiktionaryimporter import query, search, titles
 try:
@@ -149,6 +149,8 @@ class Word():
 		return translations
 
 	def describe(self):
+		if not self. title: return
+		if not self. text: return
 		from pprint import pprint as prettyprint
 		import pprint 
 		prettyprint=pprint.PrettyPrinter(indent=2).pprint #wtf api
