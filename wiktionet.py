@@ -10,7 +10,6 @@ except:
 	
 cache={}
 debug_wiktionary= False
-debug_wiktionary= True
 def word( title):
 		if title in cache:
 		 	 return cache[ title]
@@ -217,16 +216,12 @@ if __name__ == '__main__':
 	if len(sys.argv)>1:
 		arg=sys.argv[1] 
 	else:
-		 	#debug_wiktionary= True
+		 	debug_wiktionary= True
 		 	arg='sex' # 'Pannous' Quasiris
-	pprint(word(arg).derivatives())
-	#describe(arg)
+	describe(arg)
 	#print(search('head|akk'))
 
 #compounds = re.findall(r'\{compound\|(.*?)\|(.*?)\|(.*?)\}', text)
-
-
-
 
 
 """
