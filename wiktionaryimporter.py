@@ -3,10 +3,13 @@ import bz2
 import xml
 import xml.sax
 import sqlite3
-from os.path import exists, isfile
 import os
-dir = os.path.dirname(os.path.abspath(__file__))
+
+
 dir = os.getenv("HOME")+'/Documents/bin/'
+if not os.path.exists(dir):
+	dir = os.path.dirname(os.path.abspath(__file__))
+	
 url = 'https://dumps.wikimedia.org/enwiktionary/latest/enwiktionary-latest-pages-articles.xml.bz2'
 print(dir)
 conn = sqlite3.connect(dir + '/wiktionary.sqlite')
@@ -136,7 +139,7 @@ def preprocess(report=True):
 
 
 def fix(query):
-	return query.replace(":", "+")
+	return query.replace(":", "+").replace("|", "+")
 
 
 def search(phrase, limit=10):
