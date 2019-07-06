@@ -4,10 +4,12 @@ import xml
 import xml.sax 
 import sqlite3 
 from os.path import exists, isfile 
- 
+import os
+dir=os.path.dirname(os.path.abspath(__file__))
+
 url = 'https://dumps.wikimedia.org/enwiktionary/latest/enwiktionary-latest-pages-articles.xml.bz2' 
  
-conn = sqlite3.connect('wiktionary.sqlite') 
+conn = sqlite3.connect(dir+'/wiktionary.sqlite') 
 c = conn.cursor() 
  
 # The database will be saved where your 'py' file is saved 
@@ -40,15 +42,7 @@ def prepare_search_index():
     conn.commit() 
  
  
-def search(phrase, limit=10): 
-    c = conn.cursor() 
-    #prepare_search_index() 
-    query="SELECT * FROM search WHERE content MATCH '%s' LIMIT %d;" 
-    c.execute(query % (phrase, limit)) 
-    results = c.fetchall() 
-    return [r[0] for r in results] 
- 
- 
+
 class StreamHandler(xml.sax.handler.ContentHandler): 
     count = 0 
     lastEntry = {} 
@@ -136,6 +130,17 @@ def preprocess(report=True):
         print('enwiktionary ') 
     finally: 
         conn.commit()  #remaining inserts 
+
+def fix(query):
+	return query. replace(":","+")
+def search(phrase, limit=10): 
+    c = conn.cursor() 
+    #prepare_search_index() 
+    query="SELECT * FROM search WHERE content MATCH '%s' LIMIT %d;" 
+    c.execute(query % (fix(phrase), limit)) 
+    results = c.fetchall() 
+    return [r[0] for r in results] 
+ 
  
  
 def all(word, rows='content', fuzzy=False, limit=1000): 
