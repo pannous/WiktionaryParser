@@ -1,10 +1,13 @@
 import unittest, json
-from .context import WiktionaryParser
+
+from .context import WiktionaryParser, query, search, titles
 from deepdiff import DeepDiff
 
 parser = WiktionaryParser()
 
 class TestParser(unittest.TestCase):
+
+
     def test_multiple_languages(self):
         sample_output = {}
         with open('tests/testOutput.json', 'r') as f:
