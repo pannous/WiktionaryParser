@@ -5,7 +5,6 @@ import xml.sax
 import sqlite3
 import os
 
-
 dir = os.getenv("HOME")+'/Documents/bin/'
 if not os.path.exists(dir):
 	dir = os.path.dirname(os.path.abspath(__file__))
@@ -14,15 +13,13 @@ url = 'https://dumps.wikimedia.org/enwiktionary/latest/enwiktionary-latest-pages
 print(dir)
 conn = sqlite3.connect(dir + '/wiktionary.sqlite')
 c = conn.cursor()
-
 # The database will be saved where your 'py' file is saved 
-
-
-def prepare_database(drop=False):
-	c = conn.cursor()
-	if drop:
-		c.execute('''DROP TABLE IF EXISTS wiktionary''')
-	c.execute(''' 
+ 
+def prepare_database(drop=False): 
+    c = conn.cursor() 
+    if drop: 
+        c.execute('''DROP TABLE IF EXISTS wiktionary''') 
+    c.execute(''' 
 	CREATE TABLE IF NOT EXISTS wiktionary( 
 		[iid] INTEGER PRIMARY KEY, 
 		[title] text,  
@@ -35,7 +32,6 @@ def prepare_database(drop=False):
 		'CREATE VIRTUAL TABLE IF NOT EXISTS search USING FTS5(title, content);')
 	c.execute('CREATE INDEX IF NOT EXISTS title_index ON wiktionary (title); ')
 	conn.commit()
-
 
 def prepare_search_index():
 	print('building full search index 2GB->5GB')
@@ -137,71 +133,69 @@ def preprocess(report=True):
 	finally:
 		conn.commit()  #remaining inserts 
 
-
 def fix(query):
-	return query.replace(":", "+").replace("|", "+")
-
-
-def search(phrase, limit=10):
-	c = conn.cursor()
-	#prepare_search_index() 
-	query = "SELECT * FROM search WHERE content MATCH '%s' LIMIT %d;"
-	c.execute(query % (fix(phrase), limit))
-	results = c.fetchall()
-	return [r[0] for r in results]
-
-
-def all(word, rows='content', fuzzy=False, limit=1000):
-	preprocess(False)
-	c = conn.cursor()
-	sql = "SELECT %s FROM wiktionary %s limit %d"
-	#sql = "SELECT %s FROM search %s limit %d"  # NO INDEX => SLOW!
-	if fuzzy:
-		criterion = "where title like '%" + word + "%'"
-	else:
-		criterion = "where title = '%s'" % word
-	if limit == -1 or word == '*':
-		criterion = ''
-	print(sql % (rows, criterion, limit))
-	c.execute(sql % (rows, criterion, limit))
-	results = c.fetchall()
-	return [r[0] for r in results]
-
-
-def query(word):
-	return all(word, fuzzy=False, limit=1)
-
-
-def fuzzy(word):
-	return all(word, fuzzy=True)
-
-
-def titles(word):
-	return all(word, rows='title', fuzzy=True)
-
-
-def count_titles(word='*'):
-	return all(word, rows='count(*)', fuzzy=True)
-
-
-def dump_titles():
-	xs = all('*', rows='title', limit=100)
-	print(xs)
-
-
-if __name__ == '__main__':
-	preprocess()
-	# c.execute('CREATE INDEX IF NOT EXISTS title_index ON wiktionary (title); ') 
-	conn.commit()
-
-	#prepare_database() 
-	w = search('דֶּלֶת')
-	w = search('coptic')
-	print(w)
-	dump_titles()
-	nr = count_titles()  # NOT ON search without index 
-	print(nr)
-	w = titles('ⲗⲁ')
-	print(w)
-	w = query('𐎄𐎍𐎚')  # porta door spalt 
-	print(w)
+	return query. replace(":","+")
+def search(phrase, limit=10): 
+    c = conn.cursor() 
+    #prepare_search_index() 
+    query="SELECT * FROM search WHERE content MATCH '%s' LIMIT %d;" 
+    c.execute(query % (fix(phrase), limit)) 
+    results = c.fetchall() 
+    return [r[0] for r in results] 
+ 
+ 
+ 
+def all(word, rows='content', fuzzy=False, limit=1000): 
+    preprocess(False) 
+    c = conn.cursor() 
+    sql = "SELECT %s FROM wiktionary %s limit %d" 
+    # sql = "SELECT %s FROM search %s limit %d"  # NO INDEX => SLOW!
+    if fuzzy: 
+        criterion = "where title like '%" + word + "%'" 
+    else: 
+        criterion = "where title = '%s'" % word 
+    if limit == -1 or word == '*': 
+        criterion = '' 
+    print(sql % (rows, criterion, limit)) 
+    c.execute(sql % (rows, criterion, limit)) 
+    results = c.fetchall() 
+    return [r[0] for r in results] 
+ 
+ 
+def query(word): 
+    return all(word, fuzzy=False, limit=1) 
+ 
+ 
+def fuzzy(word): 
+    return all(word, fuzzy=True) 
+ 
+ 
+def titles(word): 
+    return all(word, rows='title', fuzzy=True) 
+ 
+ 
+def count_titles(word='*'): 
+    return all(word, rows='count(*)', fuzzy=True) 
+ 
+ 
+def dump_titles(): 
+    xs = all('*', rows='title', limit=100) 
+    print(xs) 
+ 
+ 
+if __name__ == '__main__': 
+    preprocess() 
+    # c.execute('CREATE INDEX IF NOT EXISTS title_index ON wiktionary (title); ') 
+    conn.commit() 
+ 
+    #prepare_database() 
+    w = search('דֶּלֶת') 
+    w = search('coptic') 
+    print(w) 
+    dump_titles() 
+    nr = count_titles() # NOT ON search without index 
+    print(nr) 
+    w = titles('ⲗⲁ') 
+    print(w) 
+    w = query('𐎄𐎍𐎚')  # porta door spalt 
+    print(w) 

@@ -148,8 +148,10 @@ class Word():
 		return translations
 
 	def describe(self):
-		if not self. title: return
-		if not self. text: return
+		if not self. title:
+			return
+		if not self. text:
+			return
 		from pprint import pprint as prettyprint
 		import pprint 
 		prettyprint=pprint.PrettyPrinter(indent=2).pprint #wtf api
@@ -222,6 +224,9 @@ if __name__ == '__main__':
 	#print(search('head|akk'))
 
 #compounds = re.findall(r'\{compound\|(.*?)\|(.*?)\|(.*?)\}', text)
+
+
+
 
 
 """
