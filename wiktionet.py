@@ -15,6 +15,30 @@ def word( title):
 		 	 return cache[ title]
 		return Word( title)
 		 	  
+
+def flatten(l):
+	if isinstance(l, (list, tuple)):
+		for k in l:
+			if isinstance(k, (list, tuple)):
+				l.remove(k)
+				for j in k:
+					l+=flatten(j)
+			# else keep
+		return l
+	else:
+		return [l]
+	# verbose("NOT flattenable: %s"%s)
+
+
+def clean(link):
+	if isinstance(link , tuple): return link
+	if isinstance(link , list): return flatten(list(map(clean,link)))
+	links=link.split("|")
+	return flatten(list(filter(lambda l:not '=' in l,links)))
+	# return xlist links.select(lambda l:not '=' in l)
+
+
+
 class Word():
 	def __init__(self, title, content=''):
 		if not content:
@@ -25,9 +49,15 @@ class Word():
 			if results:
 				content = results[0]
 		self.content = content
-		self.text = self.content
+		self.text = self.content.strip()+"===="
 		self. title= title
 		cache[ title]= self
+		if len(content)<100 and len(self.links())==1 :
+				redir=self.links()[0]
+				print("redirect to "+redir)
+				# self=Word(redir)
+				self.content = str(query(redir))
+				self.text = self.content#.strip()+"===="
 
 	def parents(self):
 		return re.findall(r'\{inh\|(.*?)\|(.*?)\|([^\}]*)', self.text)
@@ -39,8 +69,7 @@ class Word():
 			 return re.findall(r'\{ws\|(.*?)\}', text)
 		except : 
 			return word('Thesaurus:'+self.title).hyponyms() if not ':' in self.title else []
-			
-			
+
 	def antonyms(self):
 		xs= re.findall(r'\{ant\|(.*?)\}', self.text)
 		if xs: return
@@ -59,25 +88,41 @@ class Word():
 			 return re.findall(r'\{ws\|(.*?)\}', text)
 		except : 
 			return word('Thesaurus:'+self.title).Hypernyms() if not ':' in self.title else []
-		
+	
+
+	def compounds(self):
+		# compounds = re.findall(r'\{compound\|(.*?)\|(.*?)\|(.*?)\}', self.text)
+		compounds=re.findall(r'\{Han char.*?ids=(.*?)\}',self.text)
+		if not compounds:
+			compounds = clean(re.findall(r'\{Han compound\|(.*?)\}',self.text))
+		return flatten(compounds)
+	
+
 	def etymology(self):
 		try:
 			text= re. findall( r'Etymology==+(.*?)==',self.text)[0]
-		except : text= self. content
-		#found = re.findall(r'\{inh\|(.*?)\|([^\}]*)', self.text)
-		found = re.findall(r'\{inh\|(.*?)\|(.*?)\|([^\}]*)', self.text)
-		found += re.findall(r'\{der\|(.*?)\|(.*?)\|([^\}]*)', self.text)
+		except : text=self.text # self. content ?
+		found = re.findall(r'\{inh\|(.*?)\|([^\}]*)', self.text)
+		# found = re.findall(r'\{inh\|(.*?)\|(.*?)\|([^\}]*)', text)
+		found += re.findall(r'-forms\|alt=(.*?)\|',text)
+		found += re.findall(r'\{der\|(.*?)\|(.*?)\|([^\}]*)',text)
 		found += re.findall(r'\{m\|(.*?)\|(.*?)[\||\}]', text) # meronym?
-		found += re.findall(r'\{suffix\|([^\}]*)', self.text)
+		found += re.findall(r'\{suffix\|([^\}]*)', text)
 		found += re.findall(r'\{plural of\|([^\}]*)', self.text)
 		found += re.findall(r'\{bor\|(.*?)\|(.*?)\|([^\}]*)', self.text) #borrowing
-		return found
+		found += self.compounds()
+		return clean(found)
 
-	def derivatives(self):
+	def derived(self):
 		found = re.findall(r'\{der\|(.*?)\|(.*?)\|([^\}]*)', self.text)
 		found += re.findall(r'\{m\|(.*?)\|([^\}]*)', self.text) # meronym?
 		found += re.findall(r'\{l\|(.*?)\|([^\}]*)', self.text)
 		found += re.findall(r'\{der4\|([^\}]*)', self.text)
+		try:
+			text= re. findall( r'Derived characters==+(.*?)==',self.text)[0]
+			found += re.findall(r'\{l\|(.*?)\|([^\}]*)', text) # done above!
+			found += re.findall(r'\[\[(.*?)\]\]',text)
+		except : pass
 		return found
 
 	def context(self):
@@ -110,6 +155,7 @@ class Word():
 		
 	def links(self):
 		links = re.findall(r'\{also\|(.*?)\}', self.text)
+		links += re.findall(r'-see\|(.*?)\}', self.text)
 		links += re.findall(r'\{w\|(.*?)\}', self.text)
 		#links += re.findall(r'\{l\|(.*?)\}', self.text)
 		links += re.findall(r'\[\[(.*?)[\||\]]', self.text)
@@ -137,6 +183,7 @@ class Word():
 	def pronounciations(self):
 		ipas = re.findall(r'\{IPA\|([^\}]*)', self.text)
 		ipas += re.findall(r'\{enPR\|([^\}]*)', self.text)
+		ipas += re.findall(r'pron\|m=(.*?)\|',self.text)
 		#ipas += re.findall(r'\{\w+\-IPA\|(.*?)\|([^\}]*)', self.text)
 		return ipas
 
@@ -145,6 +192,18 @@ class Word():
 		translations += re.findall(r'\{t\|(.*?)\|([^\}]*)', self.text)
 		translations += re.findall(r'\{t\+check\|(.*?)\|([^\}]*)', self.text)
 		translations += re.findall(r'\{t\-simple\|(.*?)\|([^\}]*)', self.text)
+		try:
+			text= re. findall( r'Definitions==+(.*?)==',self.text)[0]
+			translations += re.findall(r'\[\[(.*?)\]', text)
+		except : pass		
+		try:
+			text= re. findall( r'Noun==+(.*?)==',self.text)[0]
+			translations += re.findall(r'\[\[(.*?)\]', text)
+		except : pass
+		try:
+			text= re. findall( r'Verb==+(.*?)==',self.text)[0]
+			translations += re.findall(r'\[\[(.*?)\]', text)
+		except : pass
 		return translations
 
 	def describe(self):
@@ -157,7 +216,7 @@ class Word():
 		prettyprint=pprint.PrettyPrinter(indent=2).pprint #wtf api
 		print( self. json())
 		prettyprint( self. json())
-		return
+		return self.json()
 		word= self
 		print('parts',word. parts())
 		print('parents',word.parents())
@@ -168,7 +227,7 @@ class Word():
 		print('rhymes',word. rhymes())
 		print('references',word.references())
 		print('pronounciations',word.pronounciations())
-		print('derivatives',word.derivatives())
+		print('derived',word.derived())
 		print('qualifiers',word.qualifiers())
 		print('etymology',word.etymology())
 		print('declensions',word.declensions())
@@ -180,9 +239,12 @@ class Word():
 		print('Hypernyms', word.hyponyms())
 		print('Thesaurus', word.Thesaurus())
 		print('translations',word.translations())
+		# print('content',word.content)
+		return self.json()
 
 	def json(word):
 		return {
+		# 'content':word.content, #raw
 			'parts':word. parts(),
 			'parents':word.parents(),
 			'links':word.links(),
@@ -191,9 +253,10 @@ class Word():
 			'rhymes':word. rhymes(),
 			'references':word.references(),
 			'pronounciations':word.pronounciations(),
-			'derivatives':word.derivatives(),
+			'derived':word.derived(),#derivatives
 			'qualifiers':word.qualifiers(),
 			'etymology':word.etymology(),
+			'compounds':word.compounds(),
 			'declensions':word.declensions(),
 			'examples': word.examples(),
 			'synonyms': word.synonyms(),
@@ -223,7 +286,7 @@ if __name__ == '__main__':
 	describe(arg)
 	#print(search('head|akk'))
 
-#compounds = re.findall(r'\{compound\|(.*?)\|(.*?)\|(.*?)\}', text)
+
 
 
 
