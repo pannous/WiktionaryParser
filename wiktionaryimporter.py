@@ -146,6 +146,7 @@ def search(phrase, limit=10):
  
  
 def all(word, rows='content', fuzzy=False, limit=1000): 
+	if '|' in word: word= word.split('|')[0]
 	preprocess(False) 
 	c = conn.cursor() 
 	sql = "SELECT %s FROM wiktionary %s limit %d" 

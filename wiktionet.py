@@ -41,6 +41,8 @@ def clean(link):
 
 class Word():
 	def __init__(self, title, content=''):
+		if '|' in title:
+			title = title.split('|')[0]
 		if not content:
 			results = query(title)
 			if not results and not ':' in title : results = query(title. capitalize())
@@ -52,7 +54,7 @@ class Word():
 		self.text = self.content.strip()+"===="
 		self. title= title
 		cache[ title]= self
-		if len(content)<100 and len(self.links())==1 :
+		if len(content)<100 and 0 < len(self.links()) <3 :
 				redir=self.links()[0]
 				print("redirect to "+redir)
 				# self=Word(redir)
@@ -68,7 +70,7 @@ class Word():
 			 text= re. findall( r'Hyponyms==+(.*?)==',self.text)[0]
 			 return re.findall(r'\{ws\|(.*?)\}', text)
 		except : 
-			return word('Thesaurus:'+self.title).hyponyms() if not ':' in self.title else []
+			return [] #word('Thesaurus:'+self.title).hyponyms() if not ':' in self.title else []
 
 	def antonyms(self):
 		xs= re.findall(r'\{ant\|(.*?)\}', self.text)
