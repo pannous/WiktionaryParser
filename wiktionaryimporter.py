@@ -122,7 +122,7 @@ def preprocess(report=True):
 	parser.setContentHandler(StreamHandler())
 	try:
 		filename = 'enwiktionary-latest-pages-articles.xml.bz2'
-		if not exists(filename):
+		if not os.path.exists(filename):
 			download(url, filename)
 		f = bz2.open(filename, mode='rt', encoding='utf8')
 		prepare_database()
